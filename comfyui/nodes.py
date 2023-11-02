@@ -15,6 +15,17 @@ from modelscope.utils.constant import Tasks
 from torch import multiprocessing
 from transformers import pipeline as tpipeline
 
+class FCStyleLoraLoad:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {}
+    FUNCTION = "style_lora_load"
+    CATEGORY = "facechain/lora"
+
+    def style_lora_load(self):
+        return ()
+
+
 class FCLoraMerge:
     @classmethod
     def INPUT_TYPES(s):
@@ -32,11 +43,9 @@ class FCLoraMerge:
     CATEGORY = "facechain/lora"
 
     def retain_face(self, merge_lora_first, merge_lora_second):
-
-        pipe = StableDiffusionPipeline.from_pretrained(base_model_path, safety_checker=None, torch_dtype=torch.float32)
-
-        merge_lora()
-        return (image,)
+        # pipe = StableDiffusionPipeline.from_pretrained(base_model_path, safety_checker=None, torch_dtype=torch.float32)
+        # merge_lora()
+        return ()
 
 class FCLoraStyle:
     @classmethod
