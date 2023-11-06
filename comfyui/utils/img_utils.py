@@ -3,9 +3,6 @@ import torch
 from PIL import ImageOps
 from PIL import Image
 
-# import pydevd_pycharm
-# pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
-
 def img_to_tensor(input):
     i = ImageOps.exif_transpose(input)
     image = i.convert("RGB")

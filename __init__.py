@@ -9,12 +9,17 @@ sys.path.append(root_path)
 from .comfyui.nodes import *
 
 NODE_CLASS_MAPPINGS = {
-    "FC_LoraMerge": FCLoraMerge,
+    # "FC_LoraMerge": FCLoraMerge,
+    "FC_FaceFusion": FCFaceFusion,
+    "FC_FaceDetection": FCFaceDetection,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "FC_LoraMerge": "FC LoraMerge",
+    "FC_FaceFusion": "FC FaceFusion",
+    "FC_FaceDetection": "FC FaceDetection",
+
 }
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
+
 # install_model = ["python-slugify==8.0.1", "modelscope", "controlnet_aux==0.0.6", "onnxruntime==1.15.1", "mmcv==1.7.0", "mmdet==2.26.0", "mediapipe==0.10.3", "edge_tts"]
 
 def handle_stream(stream, prefix):
