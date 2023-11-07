@@ -14,8 +14,9 @@ from modelscope.utils.constant import Tasks
 from torch import multiprocessing
 from transformers import pipeline as tpipeline
 
-import pydevd_pycharm
-pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
+# import pydevd_pycharm
+# pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
+
 from .model_holder import *
 from .utils.img_utils import *
 
@@ -115,3 +116,38 @@ class FCFaceDetection:
         box = np.array(box, np.int32)
         crop_result = source_image[:, box[1]:box[3], box[0]:box[2], :]
         return (crop_result, box)
+
+class FCCropMask:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "face_box": ("BOX",)
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE", "MASK",)
+    FUNCTION = "crop_mask"
+    CATEGORY = "facechain/mask"
+
+    def crop_mask(self, image, face_box):
+        image = tensor_to_np(image)
+        inpaint_img_large = image
+        mask_large = np.ones_like(inpaint_img_large)
+        mask_large1 = np.zeros_like(inpaint_img_large)
+        h, w, _ = inpaint_img_large.shape
+        face_ratio = 0.45
+        cropl = int(max(face_box[3] - face_box[1], face_box[2] - face_box[0]) / face_ratio / 2)
+        cx = int((face_box[2] + face_box[0]) / 2)
+        cy = int((face_box[1] + face_box[3]) / 2)
+        cropup = min(cy, cropl)
+        cropbo = min(h - cy, cropl)
+        crople = min(cx, cropl)
+        cropri = min(w - cx, cropl)
+        inpaint_img = np.pad(inpaint_img_large[cy - cropup:cy + cropbo, cx - crople:cx + cropri], ((cropl - cropup, cropl - cropbo), (cropl - crople, cropl - cropri), (0, 0)), 'constant')
+        inpaint_img = cv2.resize(inpaint_img, (512, 512))
+        inpaint_img = Image.fromarray(cv2.cvtColor(inpaint_img[:, :, ::-1], cv2.COLOR_BGR2RGB))
+        mask_large1[cy - cropup:cy + cropbo, cx - crople:cx + cropri] = 1
+        mask_large = mask_large * mask_large1
+        return (img_to_tensor(inpaint_img), np_to_mask(mask_large))

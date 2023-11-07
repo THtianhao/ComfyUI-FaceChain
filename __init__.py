@@ -12,10 +12,12 @@ NODE_CLASS_MAPPINGS = {
     # "FC_LoraMerge": FCLoraMerge,
     "FC_FaceFusion": FCFaceFusion,
     "FC_FaceDetection": FCFaceDetection,
+    "FC_CropMask": FCCropMask,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "FC_FaceFusion": "FC FaceFusion",
     "FC_FaceDetection": "FC FaceDetection",
+    "FC_CropMask": "FC CropMask",
 
 }
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
