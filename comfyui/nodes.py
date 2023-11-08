@@ -20,17 +20,6 @@ from transformers import pipeline as tpipeline
 from .model_holder import *
 from .utils.img_utils import *
 
-class FCStyleLoraLoad:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {}
-
-    FUNCTION = "style_lora_load"
-    CATEGORY = "facechain/lora"
-
-    def style_lora_load(self):
-        return ()
-
 class FCLoraMerge:
     @classmethod
     def INPUT_TYPES(s):
@@ -151,3 +140,84 @@ class FCCropMask:
         mask_large1[cy - cropup:cy + cropbo, cx - crople:cx + cropri] = 1
         mask_large = mask_large * mask_large1
         return (img_to_tensor(inpaint_img), np_to_mask(mask_large))
+
+class FCSegment:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "source_image": ("IMAGE",),
+            }
+        }
+
+    RETURN_TYPES = ("MASK",)
+    FUNCTION = "fc_segment"
+    CATEGORY = "facechain/model"
+
+    def segment(segmentation_pipeline, img, ksize=0, eyeh=0, ksize1=0, include_neck=False, warp_mask=None, return_human=False):
+        if True:
+            result = segmentation_pipeline(img)
+            masks = result['masks']
+            scores = result['scores']
+            labels = result['labels']
+            if len(masks) == 0:
+                return
+            h, w = masks[0].shape
+            mask_face = np.zeros((h, w))
+            mask_hair = np.zeros((h, w))
+            mask_neck = np.zeros((h, w))
+            mask_cloth = np.zeros((h, w))
+            mask_human = np.zeros((h, w))
+            for i in range(len(labels)):
+                if scores[i] > 0.8:
+                    if labels[i] == 'Torso-skin':
+                        mask_neck += masks[i]
+                    elif labels[i] == 'Face':
+                        mask_face += masks[i]
+                    elif labels[i] == 'Human':
+                        mask_human += masks[i]
+                    elif labels[i] == 'Hair':
+                        mask_hair += masks[i]
+                    elif labels[i] == 'UpperClothes' or labels[i] == 'Coat':
+                        mask_cloth += masks[i]
+            mask_face = np.clip(mask_face, 0, 1)
+            mask_hair = np.clip(mask_hair, 0, 1)
+            mask_neck = np.clip(mask_neck, 0, 1)
+            mask_cloth = np.clip(mask_cloth, 0, 1)
+            mask_human = np.clip(mask_human, 0, 1)
+            if np.sum(mask_face) > 0:
+                soft_mask = np.clip(mask_face, 0, 1)
+                if ksize1 > 0:
+                    kernel_size1 = int(np.sqrt(np.sum(soft_mask)) * ksize1)
+                    kernel1 = np.ones((kernel_size1, kernel_size1))
+                    soft_mask = cv2.dilate(soft_mask, kernel1, iterations=1)
+                if ksize > 0:
+                    kernel_size = int(np.sqrt(np.sum(soft_mask)) * ksize)
+                    kernel = np.ones((kernel_size, kernel_size))
+                    soft_mask_dilate = cv2.dilate(soft_mask, kernel, iterations=1)
+                    if warp_mask is not None:
+                        soft_mask_dilate = soft_mask_dilate * (np.clip(soft_mask + warp_mask[:, :, 0], 0, 1))
+                    if eyeh > 0:
+                        soft_mask = np.concatenate((soft_mask[:eyeh], soft_mask_dilate[eyeh:]), axis=0)
+                    else:
+                        soft_mask = soft_mask_dilate
+            else:
+                if ksize1 > 0:
+                    kernel_size1 = int(np.sqrt(np.sum(soft_mask)) * ksize1)
+                    kernel1 = np.ones((kernel_size1, kernel_size1))
+                    soft_mask = cv2.dilate(mask_face, kernel1, iterations=1)
+                else:
+                    soft_mask = mask_face
+            if include_neck:
+                soft_mask = np.clip(soft_mask + mask_neck, 0, 1)
+
+        if return_human:
+            mask_human = cv2.GaussianBlur(mask_human, (21, 21), 0) * mask_human
+            return soft_mask, mask_human
+        else:
+            return soft_mask
+
+    def fc_segment(self, source_image):
+        source_image = img_to_tensor(source_image)
+        mask = self.segment(get_segmentation(), source_image, ksize=0.1)
+        return (img_to_mask(mask),)

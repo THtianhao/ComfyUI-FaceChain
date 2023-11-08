@@ -7,17 +7,22 @@ root_path = os.path.dirname(__file__)
 parent_dir = os.path.dirname(root_path)
 sys.path.append(root_path)
 from .comfyui.nodes import *
+from .comfyui.style_loader_node import *
 
 NODE_CLASS_MAPPINGS = {
     # "FC_LoraMerge": FCLoraMerge,
     "FC_FaceFusion": FCFaceFusion,
+    "FC_StyleLoraLoad": FCStyleLoraLoad,
     "FC_FaceDetection": FCFaceDetection,
     "FC_CropMask": FCCropMask,
+    "FC_Segment": FCSegment,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "FC_FaceFusion": "FC FaceFusion",
+    "FC_StyleLoraLoad": "FC StyleLoraLoad",
     "FC_FaceDetection": "FC FaceDetection",
     "FC_CropMask": "FC CropMask",
+    "FC_Segment": "FC Segment",
 
 }
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
