@@ -14,8 +14,8 @@ from modelscope.utils.constant import Tasks
 from torch import multiprocessing
 from transformers import pipeline as tpipeline
 
-# import pydevd_pycharm
-# pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
+import pydevd_pycharm
+pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
 
 from .model_holder import *
 from .utils.img_utils import *
@@ -139,7 +139,7 @@ class FCCropMask:
         inpaint_img = Image.fromarray(cv2.cvtColor(inpaint_img[:, :, ::-1], cv2.COLOR_BGR2RGB))
         mask_large1[cy - cropup:cy + cropbo, cx - crople:cx + cropri] = 1
         mask_large = mask_large * mask_large1
-        return (img_to_tensor(inpaint_img), np_to_mask(mask_large))
+        return (img_to_tensor(inpaint_img), mask_np3_to_mask_tensor(mask_large))
 
 class FCSegment:
     @classmethod
@@ -154,7 +154,7 @@ class FCSegment:
     FUNCTION = "fc_segment"
     CATEGORY = "facechain/model"
 
-    def segment(segmentation_pipeline, img, ksize=0, eyeh=0, ksize1=0, include_neck=False, warp_mask=None, return_human=False):
+    def segment(self, segmentation_pipeline, img, ksize=0, eyeh=0, ksize1=0, include_neck=False, warp_mask=None, return_human=False):
         if True:
             result = segmentation_pipeline(img)
             masks = result['masks']
@@ -185,6 +185,7 @@ class FCSegment:
             mask_neck = np.clip(mask_neck, 0, 1)
             mask_cloth = np.clip(mask_cloth, 0, 1)
             mask_human = np.clip(mask_human, 0, 1)
+            soft_mask = 0
             if np.sum(mask_face) > 0:
                 soft_mask = np.clip(mask_face, 0, 1)
                 if ksize1 > 0:
@@ -218,6 +219,6 @@ class FCSegment:
             return soft_mask
 
     def fc_segment(self, source_image):
-        source_image = img_to_tensor(source_image)
+        source_image = tensor_to_img(source_image)
         mask = self.segment(get_segmentation(), source_image, ksize=0.1)
-        return (img_to_mask(mask),)
+        return (mask_np2_to_mask_tensor(mask),)

@@ -23,11 +23,19 @@ def img_to_mask(input):
     mask_tensor = torch.from_numpy(new_np).permute(2, 0, 1)[0:1, :, :]
     return mask_tensor
 
-def np_to_tensor(input):
+def image_np2_to_mask_tensor(input):
     image = input.astype(np.float32) / 255.0
     tensor = torch.from_numpy(image)[None,]
     return tensor
 
+def mask_np2_to_mask_tensor(input):
+    image = input.astype(np.float32)
+    tensor = torch.from_numpy(image)[None,]
+    return tensor
+def mask_np3_to_mask_tensor(input):
+    image = input.astype(np.float32)
+    tensor = torch.from_numpy(image).permute(2, 0, 1)[0:1, :, :]
+    return tensor
 def tensor_to_img(image):
     image = image[0]
     i = 255. * image.cpu().numpy()
@@ -40,7 +48,7 @@ def tensor_to_np(image):
     result = np.clip(i, 0, 255).astype(np.uint8)
     return result
 
-def np_to_mask(input):
+def image_np_to_mask(input):
     new_np = input.astype(np.float32) / 255.0
     tensor = torch.from_numpy(new_np).permute(2, 0, 1)[0:1, :, :]
     return tensor
