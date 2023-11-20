@@ -15,10 +15,12 @@ from torch import multiprocessing
 from transformers import pipeline as tpipeline
 
 import pydevd_pycharm
+
 pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
 
 from .model_holder import *
 from .utils.img_utils import *
+from .utils.convert_utils import *
 
 class FCLoraMerge:
     @classmethod
@@ -222,3 +224,66 @@ class FCSegment:
         source_image = tensor_to_img(source_image)
         mask = self.segment(get_segmentation(), source_image, ksize=0.1)
         return (mask_np2_to_mask_tensor(mask),)
+
+class FCReplaceImage:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "source_image": ("IMAGE",),
+                "replace_image": ("IMAGE",),
+                "face_box": ("BOX",),
+                "mask": ("MASK",)
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "replace_image"
+    CATEGORY = "facechain/model"
+
+    def replace_image(self, source_image, replace_image, face_box, mask):
+        face_ratio = 0.45
+        h, w, _ = replace_image.shape
+        cropl = int(max(face_box[3] - face_box[1], face_box[2] - face_box[0]) / face_ratio / 2)
+        cx = int((face_box[2] + face_box[0]) / 2)
+        cy = int((face_box[1] + face_box[3]) / 2)
+        cropup = min(cy, cropl)
+        cropbo = min(h - cy, cropl)
+        crople = min(cx, cropl)
+        cropri = min(w - cx, cropl)
+        ksize = int(10 * cropl / 256)
+        rst_gen = cv2.resize(replace_image, (cropl * 2, cropl * 2))
+        rst_crop = rst_gen[cropl - cropup:cropl + cropbo, cropl - crople:cropl + cropri]
+        print(rst_crop.shape)
+        inpaint_img_rst = np.zeros_like(source_image)
+        print('Start pasting.')
+        inpaint_img_rst[cy - cropup:cy + cropbo, cx - crople:cx + cropri] = rst_crop
+        print('Fininsh pasting.')
+        print(inpaint_img_rst.shape, mask.shape, source_image.shape)
+        mask_large = mask.astype(np.float32)
+        kernel = np.ones((ksize * 2, ksize * 2))
+        mask_large1 = cv2.erode(mask_large, kernel, iterations=1)
+        mask_large1 = cv2.GaussianBlur(mask_large1, (int(ksize * 1.8) * 2 + 1, int(ksize * 1.8) * 2 + 1), 0)
+        mask_large1[face_box[1]:face_box[3], face_box[0]:face_box[2]] = 1
+        mask_large = mask_large * mask_large1
+        final_inpaint_rst = (inpaint_img_rst.astype(np.float32) * mask_large.astype(np.float32) + source_image.astype(np.float32) * (1.0 - mask_large.astype(np.float32))).astype(np.uint8)
+        return (final_inpaint_rst,)
+
+class FCCropBottom:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "source_image": ("IMAGE",),
+                "face_index": ("INT", {"default": 0, "min": 0, "max": 10, "step": 1})
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "crop_bottom"
+    CATEGORY = "facechain/crop"
+
+    def crop_bottom(self, source_image, width):
+        source_image = tensor_to_img(source_image)
+        crop_result = crop_bottom(source_image, width)
+        return (img_to_tensor(crop_result),)

@@ -10,19 +10,21 @@ from .comfyui.nodes import *
 from .comfyui.style_loader_node import *
 
 NODE_CLASS_MAPPINGS = {
-    # "FC_LoraMerge": FCLoraMerge,
     "FC_FaceFusion": FCFaceFusion,
     "FC_StyleLoraLoad": FCStyleLoraLoad,
     "FC_FaceDetection": FCFaceDetection,
     "FC_CropMask": FCCropMask,
     "FC_Segment": FCSegment,
+    "FC_ReplaceImage": FCReplaceImage,
+    "FC_CropBottom": FCCropBottom,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "FC_FaceFusion": "FC FaceFusion",
     "FC_StyleLoraLoad": "FC StyleLoraLoad",
     "FC_FaceDetection": "FC FaceDetection",
     "FC_CropMask": "FC CropMask",
-    "FC_Segment": "FC Segment",
+    "FC_ReplaceImage": "FC ReplaceImage",
+    "FC_CropBottom": "FC CropBottom",
 
 }
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']

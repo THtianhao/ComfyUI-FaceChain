@@ -1,3 +1,4 @@
+
 class FCStyleLoraLoad:
     @classmethod
     def INPUT_TYPES(s):

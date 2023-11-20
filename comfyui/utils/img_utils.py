@@ -1,54 +1,17 @@
 import numpy as np
-import torch
-from PIL import ImageOps
 from PIL import Image
 
-def img_to_tensor(input):
-    i = ImageOps.exif_transpose(input)
-    image = i.convert("RGB")
-    image = np.array(image).astype(np.float32) / 255.0
-    tensor = torch.from_numpy(image)[None,]
-    return tensor
-
-def img_to_np(input):
-    i = ImageOps.exif_transpose(input)
-    image = i.convert("RGB")
-    image_np = np.array(image).astype(np.float32)
-    return image_np
-
-def img_to_mask(input):
-    i = ImageOps.exif_transpose(input)
-    image = i.convert("RGB")
-    new_np = np.array(image).astype(np.float32) / 255.0
-    mask_tensor = torch.from_numpy(new_np).permute(2, 0, 1)[0:1, :, :]
-    return mask_tensor
-
-def image_np2_to_mask_tensor(input):
-    image = input.astype(np.float32) / 255.0
-    tensor = torch.from_numpy(image)[None,]
-    return tensor
-
-def mask_np2_to_mask_tensor(input):
-    image = input.astype(np.float32)
-    tensor = torch.from_numpy(image)[None,]
-    return tensor
-def mask_np3_to_mask_tensor(input):
-    image = input.astype(np.float32)
-    tensor = torch.from_numpy(image).permute(2, 0, 1)[0:1, :, :]
-    return tensor
-def tensor_to_img(image):
-    image = image[0]
-    i = 255. * image.cpu().numpy()
-    img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8)).convert("RGB")
-    return img
-
-def tensor_to_np(image):
-    image = image[0]
-    i = 255. * image.cpu().numpy()
-    result = np.clip(i, 0, 255).astype(np.uint8)
-    return result
-
-def image_np_to_mask(input):
-    new_np = input.astype(np.float32) / 255.0
-    tensor = torch.from_numpy(new_np).permute(2, 0, 1)[0:1, :, :]
-    return tensor
+def crop_bottom(pil_file, width):
+    if width == 512:
+        height = 768
+    else:
+        height = 1152
+    w, h = pil_file.size
+    factor = w / width
+    new_h = int(h / factor)
+    pil_file = pil_file.resize((width, new_h))
+    crop_h = min(int(new_h / 32) * 32, height)
+    array_file = np.array(pil_file)
+    array_file = array_file[:crop_h, :, :]
+    output_file = Image.fromarray(array_file)
+    return output_file
