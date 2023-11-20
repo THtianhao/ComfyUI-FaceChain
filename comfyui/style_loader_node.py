@@ -12,9 +12,9 @@ import folder_paths
 import sys
 
 my_dir = os.path.dirname(os.path.abspath(__file__))
-custom_nodes_dir = os.path.abspath(os.path.join(my_dir, '../../ComfyUI-Facechain'))
+custom_nodes_dir = os.path.abspath(os.path.join(my_dir, '../../ComfyUI-FaceChain'))
 #comfy_dir = os.path.abspath(os.path.join(my_dir, '..', '..'))
-comfy_dir = os.path.abspath(os.path.join(my_dir, '../../ComfyUI-Facechain'))
+comfy_dir = os.path.abspath(os.path.join(my_dir, '../..'))
 
 # Append comfy_dir to sys.path & import files
 sys.path.append(comfy_dir)
@@ -125,7 +125,7 @@ class FCStyleLoraLoad:
 # 根据名称查询
 # 读取文件和解析
 def load_style_files():
-    folder =  f"{comfy_dir}/styles"
+    folder =  f"{custom_nodes_dir}/styles"
     for subdir in os.listdir(folder):
         subdir_path = os.path.join(folder, subdir)
         for json_file in os.listdir(subdir_path):
