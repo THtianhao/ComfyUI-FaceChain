@@ -14,9 +14,9 @@ from modelscope.utils.constant import Tasks
 from torch import multiprocessing
 from transformers import pipeline as tpipeline
 
-import pydevd_pycharm
-
-pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
+# import pydevd_pycharm
+#
+# pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
 
 from .model_holder import *
 from .utils.img_utils import *
