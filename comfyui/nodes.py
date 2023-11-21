@@ -9,13 +9,7 @@ from PIL import Image
 from diffusers import StableDiffusionPipeline, StableDiffusionControlNetPipeline, ControlNetModel, \
     UniPCMultistepScheduler
 from modelscope.outputs import OutputKeys
-from modelscope.pipelines import pipeline
-from modelscope.utils.constant import Tasks
-from torch import multiprocessing
-from transformers import pipeline as tpipeline
-
 # import pydevd_pycharm
-#
 # pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
 
 from .model_holder import *
@@ -287,3 +281,47 @@ class FCCropBottom:
         source_image = tensor_to_img(source_image)
         crop_result = crop_bottom(source_image, width)
         return (img_to_tensor(crop_result),)
+
+class FCCropFace:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "source_image": ("IMAGE",),
+                "crop_ratio": ("FLOAT", {"default": 1.0, "min": 0, "max": 10, "step": 0.1})
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE", "BOX")
+    FUNCTION = "face_crop"
+    CATEGORY = "facechain/crop"
+
+    def face_crop(self, source_image, crop_ratio):
+        source_image_pil = tensor_to_img(source_image)
+        det_result = get_face_detection(source_image_pil)
+        bboxes = det_result['boxes']
+        keypoints = det_result['keypoints']
+        area = 0
+        idx = 0
+        for i in range(len(bboxes)):
+            bbox = bboxes[i]
+            area_tmp = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
+            if area_tmp > area:
+                area = area_tmp
+                idx = i
+        bbox = bboxes[idx]
+        keypoint = keypoints[idx]
+        points_array = np.zeros((5, 2))
+        for k in range(5):
+            points_array[k, 0] = keypoint[2 * k]
+            points_array[k, 1] = keypoint[2 * k + 1]
+        w, h = source_image_pil.size
+        face_w = bbox[2] - bbox[0]
+        face_h = bbox[3] - bbox[1]
+        bbox[0] = np.clip(np.array(bbox[0], np.int32) - face_w * (crop_ratio - 1) / 2, 0, w - 1)
+        bbox[1] = np.clip(np.array(bbox[1], np.int32) - face_h * (crop_ratio - 1) / 2, 0, h - 1)
+        bbox[2] = np.clip(np.array(bbox[2], np.int32) + face_w * (crop_ratio - 1) / 2, 0, w - 1)
+        bbox[3] = np.clip(np.array(bbox[3], np.int32) + face_h * (crop_ratio - 1) / 2, 0, h - 1)
+        bbox = np.array(bbox, np.int32)
+        result_image = source_image[:, bbox[3]:bbox[1], bbox[0]:bbox[2], :]
+        return result_image, bbox
