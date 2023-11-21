@@ -1,5 +1,7 @@
 import os
 import json
+import shutil
+
 import comfy.utils
 import comfy
 import comfy.sd
@@ -87,6 +89,12 @@ class FCStyleLoraLoad:
             base_model_name = 'MajicmixRealistic_v6.safetensors'
 
         ckpt_path = folder_paths.get_full_path("checkpoints", base_model_name)
+        #check if modelfile not exist, download it from modelscope
+        if ckpt_path == None:
+            model_cache_dir = snapshot_download(f'ultimatech/{matching_model["name"]}')
+            # shutil.move(os.path.join(model_cache_dir,base_model_name),folder_paths.folder_names_and_paths["checkpoints"][0][0])
+            # shutil.rmtree(model_cache_dir)
+            ckpt_path = os.path.join(model_cache_dir,base_model_name)
         out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True,
                                                     embedding_directory=folder_paths.get_folder_paths("embeddings"))
 
