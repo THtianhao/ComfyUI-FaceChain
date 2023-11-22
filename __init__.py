@@ -17,7 +17,7 @@ NODE_CLASS_MAPPINGS = {
     "FC_Segment": FCSegment,
     "FC_ReplaceImage": FCReplaceImage,
     "FC_CropBottom": FCCropBottom,
-    "FC_FCCropFace": FCCropFace,
+    "FC_CropFace": FCCropFace,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "FC_FaceFusion": "FC FaceFusion",
@@ -26,7 +26,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "FC_CropMask": "FC CropMask",
     "FC_ReplaceImage": "FC ReplaceImage",
     "FC_CropBottom": "FC CropBottom",
-    "FC_FCCropFace": "FC FCCropFace",
+    "FC_CropFace": "FC CropFace",
 
 }
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']

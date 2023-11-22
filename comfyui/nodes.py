@@ -292,7 +292,7 @@ class FCCropFace:
             }
         }
 
-    RETURN_TYPES = ("IMAGE", "BOX")
+    RETURN_TYPES = ("IMAGE", "BOX", "KEY_POINT")
     FUNCTION = "face_crop"
     CATEGORY = "facechain/crop"
 
@@ -324,4 +324,4 @@ class FCCropFace:
         bbox[3] = np.clip(np.array(bbox[3], np.int32) + face_h * (crop_ratio - 1) / 2, 0, h - 1)
         bbox = np.array(bbox, np.int32)
         result_image = source_image[:, bbox[3]:bbox[1], bbox[0]:bbox[2], :]
-        return result_image, bbox
+        return result_image, bbox , points_array
