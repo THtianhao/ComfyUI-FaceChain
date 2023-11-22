@@ -3,11 +3,6 @@ import json
 import os
 
 import cv2
-import numpy as np
-import torch
-from PIL import Image
-from diffusers import StableDiffusionPipeline, StableDiffusionControlNetPipeline, ControlNetModel, \
-    UniPCMultistepScheduler
 from modelscope.outputs import OutputKeys
 # import pydevd_pycharm
 # pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
@@ -298,7 +293,7 @@ class FCCropFace:
 
     def face_crop(self, source_image, crop_ratio):
         source_image_pil = tensor_to_img(source_image)
-        det_result = get_face_detection(source_image_pil)
+        det_result = get_face_detection()(source_image_pil)
         bboxes = det_result['boxes']
         keypoints = det_result['keypoints']
         area = 0
@@ -323,5 +318,5 @@ class FCCropFace:
         bbox[2] = np.clip(np.array(bbox[2], np.int32) + face_w * (crop_ratio - 1) / 2, 0, w - 1)
         bbox[3] = np.clip(np.array(bbox[3], np.int32) + face_h * (crop_ratio - 1) / 2, 0, h - 1)
         bbox = np.array(bbox, np.int32)
-        result_image = source_image[:, bbox[3]:bbox[1], bbox[0]:bbox[2], :]
+        result_image = source_image[:, bbox[1]:bbox[3], bbox[0]:bbox[2], :]
         return result_image, bbox , points_array
