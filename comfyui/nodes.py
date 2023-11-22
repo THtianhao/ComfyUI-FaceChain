@@ -3,9 +3,11 @@ import json
 import os
 
 import cv2
+from skimage import transform
 from modelscope.outputs import OutputKeys
-# import pydevd_pycharm
-# pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
+import pydevd_pycharm
+
+pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
 
 from .model_holder import *
 from .utils.img_utils import *
@@ -319,4 +321,69 @@ class FCCropFace:
         bbox[3] = np.clip(np.array(bbox[3], np.int32) + face_h * (crop_ratio - 1) / 2, 0, h - 1)
         bbox = np.array(bbox, np.int32)
         result_image = source_image[:, bbox[1]:bbox[3], bbox[0]:bbox[2], :]
-        return result_image, bbox , points_array
+        return result_image, bbox, points_array
+
+class FCCropAndPaste:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "source_image": ("IMAGE",),
+                "source_image_mask": ("MASK",),
+                "source_box": ("BOX",),
+                "source_five_point": ("KEY_POINT",),
+                "target_image": ("IMAGE",),
+                "target_five_point": ("KEY_POINT",),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE", "MASK")
+    FUNCTION = "crop_and_paste"
+    CATEGORY = "facechain/crop"
+
+    def crop_and_paste(this, source_image, source_image_mask, source_box, source_five_point, target_image, target_five_point, use_warp=True):
+        source_image = tensor_to_img(source_image)
+        target_image = tensor_to_img(target_image)
+        source_image_mask = tensor_to_img(source_image_mask)
+        if use_warp:
+            source_five_point = np.reshape(source_five_point, [5, 2]) - np.array(source_box[:2])
+            target_five_point = np.reshape(target_five_point, [5, 2])
+
+            Crop_Source_image = source_image.crop(np.int32(source_box))
+            Crop_Source_image_mask = source_image_mask.crop(np.int32(source_box))
+            source_five_point, target_five_point = np.array(source_five_point), np.array(target_five_point)
+
+            tform = transform.SimilarityTransform()
+            tform.estimate(source_five_point, target_five_point)
+            M = tform.params[0:2, :]
+
+            warped = cv2.warpAffine(np.array(Crop_Source_image), M, np.shape(target_image)[:2][::-1], borderValue=0.0)
+            warped_mask = cv2.warpAffine(np.array(Crop_Source_image_mask), M, np.shape(target_image)[:2][::-1], borderValue=0.0)
+
+            mask = np.float32(warped_mask == 0)
+            output = mask * np.float32(target_image) + (1 - mask) * np.float32(warped)
+        else:
+            mask = np.float32(np.array(source_image_mask) == 0)
+            output = mask * np.float32(target_image) + (1 - mask) * np.float32(source_image)
+        return image_np_to_image_tensor(output), mask_np3_to_mask_tensor(mask)
+
+class FCMaskOP:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "mask": ("MASK",),
+                "method": (["concatenate"],),
+            }
+        }
+
+    RETURN_TYPES = ("MASK",)
+    FUNCTION = "mask_op"
+    CATEGORY = "facechain/mask"
+
+    def mask_op(self, mask, method):
+        mask = mask_tensor_to_mask_np3(mask)
+        result = None
+        if method == "concatenate":
+            result = np.concatenate([mask, mask, mask], axis=2)
+        return (mask_np3_to_mask_tensor(result),)
