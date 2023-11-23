@@ -79,10 +79,6 @@ class FCStyleLoraLoad:
              model_dir = snapshot_download(style_model_id, style_revision)
              style_model_path = os.path.join(model_dir, style_bin_file)
         #if using modelscope, use following code download model
-        #base_model_path = snapshot_download(base_model, revision=base_model_revision)
-        #if base_model_sub_path is not None and len(base_model_sub_path) > 0:
-        #    base_model_path = os.path.join(base_model_path, base_model_sub_path)
-        #model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
         if  matching_model['name'] == 'leosamsMoonfilm_filmGrain20':
             base_model_name = 'leosamsMoonfilm_filmGrain20.safetensors'
         if  matching_model['name'] == 'majicmixRealistic_v6':
