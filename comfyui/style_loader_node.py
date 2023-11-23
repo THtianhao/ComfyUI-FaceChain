@@ -85,8 +85,8 @@ class FCStyleLoraLoad:
         #model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
         if  matching_model['name'] == 'leosamsMoonfilm_filmGrain20':
             base_model_name = 'leosamsMoonfilm_filmGrain20.safetensors'
-        if  matching_model['name'] == 'MajicmixRealistic_v6':
-            base_model_name = 'MajicmixRealistic_v6.safetensors'
+        if  matching_model['name'] == 'majicmixRealistic_v6':
+            base_model_name = 'majicmixRealistic_v6.safetensors'
 
         ckpt_path = folder_paths.get_full_path("checkpoints", base_model_name)
         #check if modelfile not exist, download it from modelscope
