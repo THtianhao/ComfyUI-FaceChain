@@ -6,13 +6,13 @@ import cv2
 from skimage import transform
 from modelscope.outputs import OutputKeys
 import pydevd_pycharm
-
 pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
 
 from .model_holder import *
 from .utils.img_utils import *
 from .utils.convert_utils import *
-
+import pydevd_pycharm
+pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
 class FCLoraMerge:
     @classmethod
     def INPUT_TYPES(s):
@@ -133,6 +133,21 @@ class FCCropMask:
         mask_large1[cy - cropup:cy + cropbo, cx - crople:cx + cropri] = 1
         mask_large = mask_large * mask_large1
         return (img_to_tensor(inpaint_img), mask_np3_to_mask_tensor(mask_large))
+
+class FCFaceSwap():
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "face_box": ("BOX",)
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE", "MASK",)
+    FUNCTION = "crop_mask"
+    CATEGORY = "facechain/mask"
+
 
 class FCSegment:
     @classmethod
