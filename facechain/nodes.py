@@ -11,43 +11,6 @@ from facechain.utils.img_utils import *
 from facechain.utils.convert_utils import *
 from facechain.common.model_processor import facechain_detect_crop
 
-class FCLoraMerge:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "merge_lora_first": ("MODEL",),
-                "merge_lora_second": ("MODEL",),
-                "multiplier": ("FLOAT", {"default": 0.5, "min": 0, "max": 1, "step": 0.1})
-            }
-        }
-
-    RETURN_TYPES = ("MODEL",)
-    RETURN_NAMES = ("lora",)
-    FUNCTION = "merge_lora"
-    CATEGORY = "facechain/lora"
-
-    def retain_face(self, merge_lora_first, merge_lora_second):
-        # pipe = StableDiffusionPipeline.from_pretrained(base_model_path, safety_checker=None, torch_dtype=torch.float32)
-        # merge_lora()
-        return ()
-
-class FCLoraStyle:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "merge_lora_first": ("MODEL",),
-            }
-        }
-
-    RETURN_TYPES = ("MODEL",)
-    RETURN_NAMES = ("style_lora",)
-    FUNCTION = "lora_style"
-    CATEGORY = "facechain/lora"
-
-    def lora_style(self, image):
-        return (image,)
 
 class FCFaceFusion:
     @classmethod
@@ -70,24 +33,31 @@ class FCFaceFusion:
         result_image = Image.fromarray(cv2.cvtColor(result_image, cv2.COLOR_BGR2RGB))
         return (img_to_tensor(result_image),)
 
+
 class FaceDetectCrop:
+    def __init__(self):
+        pass
+
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": {
                 "source_image": ("IMAGE",),
                 "face_index": ("INT", {"default": 0, "min": 0, "max": 10, "step": 1}),
-                "crop_ratio": ("FLOAT", {"default": 1.0, "min": 0, "max": 10, "step": 0.1})
+                "crop_ratio": ("FLOAT", {"default": 1.0, "min": 0, "max": 10, "step": 0.1}),
+                "mode": (["real seg", "square 512 width heigh"],),
             }
         }
 
-    RETURN_TYPES = ("IMAGE", "BOX", "KEY_POINT")
+    RETURN_TYPES = ("IMAGE", "MASK", "BOX", "KEY_POINT")
     FUNCTION = "face_detection"
     CATEGORY = "facechain/model"
 
-    def face_detection(self, source_image, face_index, crop_ratio):
-        corp_img_pil, bbox, points_array = facechain_detect_crop(tensor_to_img(source_image), face_index, crop_ratio)
-        return (img_to_tensor(corp_img_pil), bbox, points_array)
+    def face_detection(self, source_image, face_index, crop_ratio, mode):
+        pil_image = tensor_to_img(source_image)
+        corp_img_pil, mask, bbox, points_array = facechain_detect_crop(pil_image, face_index, crop_ratio, mode)
+        return (image_to_tensor(corp_img_pil), mask_np3_to_mask_tensor(mask), bbox, points_array,)
+
 
 class FCCropMask:
     @classmethod
@@ -117,12 +87,14 @@ class FCCropMask:
         cropbo = min(h - cy, cropl)
         crople = min(cx, cropl)
         cropri = min(w - cx, cropl)
-        inpaint_img = np.pad(inpaint_img_large[cy - cropup:cy + cropbo, cx - crople:cx + cropri], ((cropl - cropup, cropl - cropbo), (cropl - crople, cropl - cropri), (0, 0)), 'constant')
+        inpaint_img = np.pad(inpaint_img_large[cy - cropup:cy + cropbo, cx - crople:cx + cropri], ((cropl - cropup, cropl - cropbo), (cropl - crople, cropl - cropri), (0, 0)),
+                             'constant')
         inpaint_img = cv2.resize(inpaint_img, (512, 512))
         inpaint_img = Image.fromarray(cv2.cvtColor(inpaint_img[:, :, ::-1], cv2.COLOR_BGR2RGB))
         mask_large1[cy - cropup:cy + cropbo, cx - crople:cx + cropri] = 1
         mask_large = mask_large * mask_large1
-        return (img_to_tensor(inpaint_img), mask_np3_to_mask_tensor(mask_large))
+        return (image_to_tensor(inpaint_img), mask_np3_to_mask_tensor(mask_large))
+
 
 class FCFaceSwap():
     @classmethod
@@ -137,6 +109,7 @@ class FCFaceSwap():
     RETURN_TYPES = ("IMAGE", "MASK",)
     FUNCTION = "crop_mask"
     CATEGORY = "facechain/mask"
+
 
 class FCFaceSegment:
     @classmethod
@@ -221,6 +194,7 @@ class FCFaceSegment:
         seg_image = tensor_to_np(source_image) * mask[:, :, None]
         return (image_np_to_image_tensor(seg_image), mask_np2_to_mask_tensor(mask),)
 
+
 class FCReplaceImage:
     @classmethod
     def INPUT_TYPES(s):
@@ -262,8 +236,10 @@ class FCReplaceImage:
         mask_large1 = cv2.GaussianBlur(mask_large1, (int(ksize * 1.8) * 2 + 1, int(ksize * 1.8) * 2 + 1), 0)
         mask_large1[face_box[1]:face_box[3], face_box[0]:face_box[2]] = 1
         mask_large = mask_large * mask_large1
-        final_inpaint_rst = (inpaint_img_rst.astype(np.float32) * mask_large.astype(np.float32) + source_image.astype(np.float32) * (1.0 - mask_large.astype(np.float32))).astype(np.uint8)
+        final_inpaint_rst = (inpaint_img_rst.astype(np.float32) * mask_large.astype(np.float32) + source_image.astype(np.float32) * (1.0 - mask_large.astype(np.float32))).astype(
+            np.uint8)
         return (final_inpaint_rst,)
+
 
 class FCCropBottom:
     @classmethod
@@ -283,6 +259,7 @@ class FCCropBottom:
         source_image = tensor_to_img(source_image)
         crop_result = crop_bottom(source_image, width)
         return (img_to_tensor(crop_result),)
+
 
 class FCCropAndPaste:
     @classmethod
@@ -327,6 +304,7 @@ class FCCropAndPaste:
             mask = np.float32(np.array(source_image_mask) == 0)
             output = mask * np.float32(target_image) + (1 - mask) * np.float32(source_image)
         return image_np_to_image_tensor(output), mask_np3_to_mask_tensor(mask)
+
 
 class FCMaskOP:
     @classmethod
