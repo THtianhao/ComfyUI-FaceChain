@@ -26,6 +26,5 @@ def facechain_detect_crop(source_image_pil, face_index, crop_ratio):
     bbox[2] = np.clip(np.array(bbox[2], np.int32) + face_w * (crop_ratio - 1) / 2, 0, w - 1)
     bbox[3] = np.clip(np.array(bbox[3], np.int32) + face_h * (crop_ratio - 1) / 2, 0, h - 1)
     bbox = np.array(bbox, np.int32)
-    source_image_pil.crop(bbox[0],bbox[1],bbox[2],bbox[3])
-    return source_image_pil, bbox, points_array
-    # result_image = source_image[:, bbox[1]:bbox[3], bbox[0]:bbox[2], :]
+    corp_img_pil = source_image_pil.crop(bbox)
+    return corp_img_pil, bbox, points_array

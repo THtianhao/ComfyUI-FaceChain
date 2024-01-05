@@ -3,17 +3,16 @@ import json
 import os
 
 import cv2
-from facechain.common.model_processor import facechain_detect_crop
 from skimage import transform
 from modelscope.outputs import OutputKeys
 import pydevd_pycharm
 
 pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
 
-from .model_holder import *
-from .utils.img_utils import *
-from .utils.convert_utils import *
-from .common import *
+from facechain.model_holder import *
+from facechain.utils.img_utils import *
+from facechain.utils.convert_utils import *
+from facechain.common.model_processor import facechain_detect_crop
 
 class FCLoraMerge:
     @classmethod
@@ -90,7 +89,8 @@ class FaceDetectCrop:
     CATEGORY = "facechain/model"
 
     def face_detection(self, source_image, face_index, crop_ratio):
-        return (facechain_detect_crop(source_image, face_index, crop_ratio))
+        corp_img_pil, bbox, points_array = facechain_detect_crop(tensor_to_img(source_image), face_index, crop_ratio)
+        return (img_to_tensor(corp_img_pil), bbox, points_array)
 
 class FCCropMask:
     @classmethod
