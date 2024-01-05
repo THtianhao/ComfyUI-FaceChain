@@ -5,9 +5,6 @@ import os
 import cv2
 from skimage import transform
 from modelscope.outputs import OutputKeys
-import pydevd_pycharm
-
-pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
 
 from facechain.model_holder import *
 from facechain.utils.img_utils import *
