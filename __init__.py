@@ -6,30 +6,30 @@ import threading
 root_path = os.path.dirname(__file__)
 parent_dir = os.path.dirname(root_path)
 sys.path.append(root_path)
-from .comfyui.nodes import *
-from .comfyui.style_loader_node import *
+from .facechain.nodes import *
+from .facechain.style_loader_node import *
 
 NODE_CLASS_MAPPINGS = {
-    "FC_FaceFusion": FCFaceFusion,
-    "FC_StyleLoraLoad": FCStyleLoraLoad,
-    "FC_FaceDetection": FCFaceDetection,
-    "FC_CropMask": FCCropMask,
-    "FC_Segment": FCSegment,
-    "FC_ReplaceImage": FCReplaceImage,
-    "FC_CropBottom": FCCropBottom,
-    "FC_CropFace": FCCropFace,
-    "FC_CropAndPaste": FCCropAndPaste,
-    "FC_MaskOP": FCMaskOP,
+    "FC FaceFusion": FCFaceFusion,
+    "FC StyleLoraLoad": FCStyleLoraLoad,
+    "FC FaceDetectCrop": FaceDetectCrop,
+    "FC FaceSegment": FCFaceSegment,
+    "FC CropMask": FCCropMask,
+    "FC ReplaceImage": FCReplaceImage,
+    "FC CropBottom": FCCropBottom,
+    "FC CropAndPaste": FCCropAndPaste,
+    "FC MaskOP": FCMaskOP,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "FC_FaceFusion": "FC FaceFusion",
-    "FC_StyleLoraLoad": "FC StyleLoraLoad",
-    "FC_FaceDetection": "FC FaceDetection",
-    "FC_CropMask": "FC CropMask",
-    "FC_ReplaceImage": "FC ReplaceImage",
-    "FC_CropBottom": "FC CropBottom",
-    "FC_CropAndPaste": "FC CropAndPaste",
-    "FC_MaskOP": "FC MaskOP",
+    "FC FaceFusion": "FC FaceFusion",
+    "FC StyleLoraLoad": "FC StyleLoraLoad",
+    "FC FaceDetectCrop": "FC FaceDetectCrop",
+    "FC FaceSegment": "FC FaceSegment",
+    "FC CropMask": "FC CropMask",
+    "FC ReplaceImage": "FC ReplaceImage",
+    "FC CropBottom": "FC CropBottom",
+    "FC CropAndPaste": "FC CropAndPaste",
+    "FC MaskOP": "FC MaskOP",
 
 }
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']

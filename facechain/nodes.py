@@ -3,16 +3,18 @@ import json
 import os
 
 import cv2
+from facechain.common.model_processor import facechain_detect_crop
 from skimage import transform
 from modelscope.outputs import OutputKeys
 import pydevd_pycharm
+
 pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
 
 from .model_holder import *
 from .utils.img_utils import *
 from .utils.convert_utils import *
-import pydevd_pycharm
-pydevd_pycharm.settrace('49.7.62.197', port=10090, stdoutToServer=True, stderrToServer=True)
+from .common import *
+
 class FCLoraMerge:
     @classmethod
     def INPUT_TYPES(s):
@@ -72,32 +74,23 @@ class FCFaceFusion:
         result_image = Image.fromarray(cv2.cvtColor(result_image, cv2.COLOR_BGR2RGB))
         return (img_to_tensor(result_image),)
 
-class FCFaceDetection:
+class FaceDetectCrop:
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": {
                 "source_image": ("IMAGE",),
-                "face_index": ("INT", {"default": 0, "min": 0, "max": 10, "step": 1})
+                "face_index": ("INT", {"default": 0, "min": 0, "max": 10, "step": 1}),
+                "crop_ratio": ("FLOAT", {"default": 1.0, "min": 0, "max": 10, "step": 0.1})
             }
         }
 
-    RETURN_TYPES = ("IMAGE", "BOX",)
+    RETURN_TYPES = ("IMAGE", "BOX", "KEY_POINT")
     FUNCTION = "face_detection"
     CATEGORY = "facechain/model"
 
-    def face_detection(self, source_image, face_index):
-        pil_source = tensor_to_img(source_image)
-        result_dec = get_face_detection()(pil_source)
-        keypoints = result_dec['keypoints']
-        boxes = result_dec['boxes']
-        scores = result_dec['scores']
-        keypoint = keypoints[face_index]
-        score = scores[face_index]
-        box = boxes[face_index]
-        box = np.array(box, np.int32)
-        crop_result = source_image[:, box[1]:box[3], box[0]:box[2], :]
-        return (crop_result, box)
+    def face_detection(self, source_image, face_index, crop_ratio):
+        return (facechain_detect_crop(source_image, face_index, crop_ratio))
 
 class FCCropMask:
     @classmethod
@@ -148,8 +141,7 @@ class FCFaceSwap():
     FUNCTION = "crop_mask"
     CATEGORY = "facechain/mask"
 
-
-class FCSegment:
+class FCFaceSegment:
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -158,7 +150,7 @@ class FCSegment:
             }
         }
 
-    RETURN_TYPES = ("MASK",)
+    RETURN_TYPES = ("IMAGE", "MASK",)
     FUNCTION = "fc_segment"
     CATEGORY = "facechain/model"
 
@@ -227,9 +219,10 @@ class FCSegment:
             return soft_mask
 
     def fc_segment(self, source_image):
-        source_image = tensor_to_img(source_image)
-        mask = self.segment(get_segmentation(), source_image, ksize=0.1)
-        return (mask_np2_to_mask_tensor(mask),)
+        pil_source_image = tensor_to_img(source_image)
+        mask = self.segment(get_segmentation(), pil_source_image, ksize=0.1)
+        seg_image = tensor_to_np(source_image) * mask[:, :, None]
+        return (image_np_to_image_tensor(seg_image), mask_np2_to_mask_tensor(mask),)
 
 class FCReplaceImage:
     @classmethod
@@ -293,50 +286,6 @@ class FCCropBottom:
         source_image = tensor_to_img(source_image)
         crop_result = crop_bottom(source_image, width)
         return (img_to_tensor(crop_result),)
-
-class FCCropFace:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "source_image": ("IMAGE",),
-                "crop_ratio": ("FLOAT", {"default": 1.0, "min": 0, "max": 10, "step": 0.1})
-            }
-        }
-
-    RETURN_TYPES = ("IMAGE", "BOX", "KEY_POINT")
-    FUNCTION = "face_crop"
-    CATEGORY = "facechain/crop"
-
-    def face_crop(self, source_image, crop_ratio):
-        source_image_pil = tensor_to_img(source_image)
-        det_result = get_face_detection()(source_image_pil)
-        bboxes = det_result['boxes']
-        keypoints = det_result['keypoints']
-        area = 0
-        idx = 0
-        for i in range(len(bboxes)):
-            bbox = bboxes[i]
-            area_tmp = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
-            if area_tmp > area:
-                area = area_tmp
-                idx = i
-        bbox = bboxes[idx]
-        keypoint = keypoints[idx]
-        points_array = np.zeros((5, 2))
-        for k in range(5):
-            points_array[k, 0] = keypoint[2 * k]
-            points_array[k, 1] = keypoint[2 * k + 1]
-        w, h = source_image_pil.size
-        face_w = bbox[2] - bbox[0]
-        face_h = bbox[3] - bbox[1]
-        bbox[0] = np.clip(np.array(bbox[0], np.int32) - face_w * (crop_ratio - 1) / 2, 0, w - 1)
-        bbox[1] = np.clip(np.array(bbox[1], np.int32) - face_h * (crop_ratio - 1) / 2, 0, h - 1)
-        bbox[2] = np.clip(np.array(bbox[2], np.int32) + face_w * (crop_ratio - 1) / 2, 0, w - 1)
-        bbox[3] = np.clip(np.array(bbox[3], np.int32) + face_h * (crop_ratio - 1) / 2, 0, h - 1)
-        bbox = np.array(bbox, np.int32)
-        result_image = source_image[:, bbox[1]:bbox[3], bbox[0]:bbox[2], :]
-        return result_image, bbox, points_array
 
 class FCCropAndPaste:
     @classmethod
