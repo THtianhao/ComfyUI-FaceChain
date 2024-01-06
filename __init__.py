@@ -11,20 +11,18 @@ from .facechain.style_loader_node import *
 
 NODE_CLASS_MAPPINGS = {
     "FC FaceFusion": FCFaceFusion,
-    "FC StyleLoraLoad": FCStyleLoraLoad,
     "FC FaceDetectCrop": FaceDetectCrop,
     "FC FaceSegment": FCFaceSegment,
-    "FC ReplaceImage": FCReplaceImage,
+    "FC FaceSegAndReplace": FCFaceSegAndReplace,
     "FC CropBottom": FCCropBottom,
     "FC CropAndPaste": FCCropAndPaste,
     "FC MaskOP": FCMaskOP,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "FC FaceFusion": "FC FaceFusion",
-    "FC StyleLoraLoad": "FC StyleLoraLoad",
     "FC FaceDetectCrop": "FC FaceDetectCrop",
     "FC FaceSegment": "FC FaceSegment",
-    "FC ReplaceImage": "FC ReplaceImage",
+    "FC FaceSegAndReplace": "FC FaceSegAndReplace",
     "FC CropBottom": "FC CropBottom",
     "FC CropAndPaste": "FC CropAndPaste",
     "FC MaskOP": "FC MaskOP",

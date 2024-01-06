@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+from modelscope.outputs import OutputKeys
+
 from facechain.model_holder import *
 from facechain.utils.convert_utils import *
 
@@ -64,3 +66,77 @@ def facechain_detect_crop(source_image_pil, face_index, crop_ratio, mode):
         return inpaint_img, mask, bbox, points_array,
     else:
         raise RuntimeError('模式错误')
+
+
+def segment(img, ksize=0, eyeh=0, ksize1=0, include_neck=False, warp_mask=None, return_human=False):
+    result = get_segmentation()(img)
+    masks = result['masks']
+    scores = result['scores']
+    labels = result['labels']
+    if len(masks) == 0:
+        return
+    h, w = masks[0].shape
+    mask_face = np.zeros((h, w))
+    mask_hair = np.zeros((h, w))
+    mask_neck = np.zeros((h, w))
+    mask_cloth = np.zeros((h, w))
+    mask_human = np.zeros((h, w))
+    for i in range(len(labels)):
+        if scores[i] > 0.8:
+            if labels[i] == 'Torso-skin':
+                mask_neck += masks[i]
+            elif labels[i] == 'Face':
+                mask_face += masks[i]
+            elif labels[i] == 'Human':
+                mask_human += masks[i]
+            elif labels[i] == 'Hair':
+                mask_hair += masks[i]
+            elif labels[i] == 'UpperClothes' or labels[i] == 'Coat':
+                mask_cloth += masks[i]
+    mask_face = np.clip(mask_face, 0, 1)
+    mask_hair = np.clip(mask_hair, 0, 1)
+    mask_neck = np.clip(mask_neck, 0, 1)
+    mask_cloth = np.clip(mask_cloth, 0, 1)
+    mask_human = np.clip(mask_human, 0, 1)
+    soft_mask = 0
+    if np.sum(mask_face) > 0:
+        soft_mask = np.clip(mask_face, 0, 1)
+        if ksize1 > 0:
+            kernel_size1 = int(np.sqrt(np.sum(soft_mask)) * ksize1)
+            kernel1 = np.ones((kernel_size1, kernel_size1))
+            soft_mask = cv2.dilate(soft_mask, kernel1, iterations=1)
+        if ksize > 0:
+            kernel_size = int(np.sqrt(np.sum(soft_mask)) * ksize)
+            kernel = np.ones((kernel_size, kernel_size))
+            soft_mask_dilate = cv2.dilate(soft_mask, kernel, iterations=1)
+            if warp_mask is not None:
+                soft_mask_dilate = soft_mask_dilate * (np.clip(soft_mask + warp_mask[:, :, 0], 0, 1))
+            if eyeh > 0:
+                soft_mask = np.concatenate((soft_mask[:eyeh], soft_mask_dilate[eyeh:]), axis=0)
+            else:
+                soft_mask = soft_mask_dilate
+    else:
+        if ksize1 > 0:
+            kernel_size1 = int(np.sqrt(np.sum(soft_mask)) * ksize1)
+            kernel1 = np.ones((kernel_size1, kernel_size1))
+            soft_mask = cv2.dilate(mask_face, kernel1, iterations=1)
+        else:
+            soft_mask = mask_face
+    if include_neck:
+        soft_mask = np.clip(soft_mask + mask_neck, 0, 1)
+
+    if return_human:
+        mask_human = cv2.GaussianBlur(mask_human, (21, 21), 0) * mask_human
+        return soft_mask, mask_human
+    else:
+        return soft_mask
+
+
+def face_fusing_seg_replace(image, template_face):
+    image_face_fusion = pipeline('face_fusion_torch', model='damo/cv_unet_face_fusion_torch', model_revision='v1.0.5')
+    result = image_face_fusion(dict(template=image, user=template_face))[OutputKeys.OUTPUT_IMG]
+    debug(result)
+    face_mask = segment(image, ksize=0.1)
+    result = (result * face_mask[:, :, None] + np.array(image)[:, :, ::-1] * (1 - face_mask[:, :, None])).astype(np.uint8)
+    debug(result)
+    return result

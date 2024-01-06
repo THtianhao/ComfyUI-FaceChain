@@ -9,7 +9,7 @@ from modelscope.outputs import OutputKeys
 from facechain.model_holder import *
 from facechain.utils.img_utils import *
 from facechain.utils.convert_utils import *
-from facechain.common.model_processor import facechain_detect_crop
+from facechain.common.model_processor import *
 
 
 class FCFaceFusion:
@@ -31,7 +31,7 @@ class FCFaceFusion:
         fusion_image = tensor_to_img(fusion_image)
         result_image = get_image_face_fusion()(dict(template=source_image, user=fusion_image))[OutputKeys.OUTPUT_IMG]
         result_image = Image.fromarray(cv2.cvtColor(result_image, cv2.COLOR_BGR2RGB))
-        return (img_to_tensor(result_image),)
+        return (image_to_tensor(result_image),)
 
 
 class FaceDetectCrop:
@@ -59,58 +59,6 @@ class FaceDetectCrop:
         return (image_to_tensor(corp_img_pil), mask_np3_to_mask_tensor(mask), bbox, points_array,)
 
 
-class FCCropMask:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "image": ("IMAGE",),
-                "face_box": ("BOX",)
-            }
-        }
-
-    RETURN_TYPES = ("IMAGE", "MASK",)
-    FUNCTION = "crop_mask"
-    CATEGORY = "facechain/mask"
-
-    def crop_mask(self, image, face_box):
-        image = tensor_to_np(image)
-        inpaint_img_large = image
-        mask_large = np.ones_like(inpaint_img_large)
-        mask_large1 = np.zeros_like(inpaint_img_large)
-        h, w, _ = inpaint_img_large.shape
-        face_ratio = 0.45
-        cropl = int(max(face_box[3] - face_box[1], face_box[2] - face_box[0]) / face_ratio / 2)
-        cx = int((face_box[2] + face_box[0]) / 2)
-        cy = int((face_box[1] + face_box[3]) / 2)
-        cropup = min(cy, cropl)
-        cropbo = min(h - cy, cropl)
-        crople = min(cx, cropl)
-        cropri = min(w - cx, cropl)
-        inpaint_img = np.pad(inpaint_img_large[cy - cropup:cy + cropbo, cx - crople:cx + cropri], ((cropl - cropup, cropl - cropbo), (cropl - crople, cropl - cropri), (0, 0)),
-                             'constant')
-        inpaint_img = cv2.resize(inpaint_img, (512, 512))
-        inpaint_img = Image.fromarray(cv2.cvtColor(inpaint_img[:, :, ::-1], cv2.COLOR_BGR2RGB))
-        mask_large1[cy - cropup:cy + cropbo, cx - crople:cx + cropri] = 1
-        mask_large = mask_large * mask_large1
-        return (image_to_tensor(inpaint_img), mask_np3_to_mask_tensor(mask_large))
-
-
-class FCFaceSwap():
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "image": ("IMAGE",),
-                "face_box": ("BOX",)
-            }
-        }
-
-    RETURN_TYPES = ("IMAGE", "MASK",)
-    FUNCTION = "crop_mask"
-    CATEGORY = "facechain/mask"
-
-
 class FCFaceSegment:
     @classmethod
     def INPUT_TYPES(s):
@@ -124,78 +72,14 @@ class FCFaceSegment:
     FUNCTION = "fc_segment"
     CATEGORY = "facechain/model"
 
-    def segment(self, segmentation_pipeline, img, ksize=0, eyeh=0, ksize1=0, include_neck=False, warp_mask=None, return_human=False):
-        if True:
-            result = segmentation_pipeline(img)
-            masks = result['masks']
-            scores = result['scores']
-            labels = result['labels']
-            if len(masks) == 0:
-                return
-            h, w = masks[0].shape
-            mask_face = np.zeros((h, w))
-            mask_hair = np.zeros((h, w))
-            mask_neck = np.zeros((h, w))
-            mask_cloth = np.zeros((h, w))
-            mask_human = np.zeros((h, w))
-            for i in range(len(labels)):
-                if scores[i] > 0.8:
-                    if labels[i] == 'Torso-skin':
-                        mask_neck += masks[i]
-                    elif labels[i] == 'Face':
-                        mask_face += masks[i]
-                    elif labels[i] == 'Human':
-                        mask_human += masks[i]
-                    elif labels[i] == 'Hair':
-                        mask_hair += masks[i]
-                    elif labels[i] == 'UpperClothes' or labels[i] == 'Coat':
-                        mask_cloth += masks[i]
-            mask_face = np.clip(mask_face, 0, 1)
-            mask_hair = np.clip(mask_hair, 0, 1)
-            mask_neck = np.clip(mask_neck, 0, 1)
-            mask_cloth = np.clip(mask_cloth, 0, 1)
-            mask_human = np.clip(mask_human, 0, 1)
-            soft_mask = 0
-            if np.sum(mask_face) > 0:
-                soft_mask = np.clip(mask_face, 0, 1)
-                if ksize1 > 0:
-                    kernel_size1 = int(np.sqrt(np.sum(soft_mask)) * ksize1)
-                    kernel1 = np.ones((kernel_size1, kernel_size1))
-                    soft_mask = cv2.dilate(soft_mask, kernel1, iterations=1)
-                if ksize > 0:
-                    kernel_size = int(np.sqrt(np.sum(soft_mask)) * ksize)
-                    kernel = np.ones((kernel_size, kernel_size))
-                    soft_mask_dilate = cv2.dilate(soft_mask, kernel, iterations=1)
-                    if warp_mask is not None:
-                        soft_mask_dilate = soft_mask_dilate * (np.clip(soft_mask + warp_mask[:, :, 0], 0, 1))
-                    if eyeh > 0:
-                        soft_mask = np.concatenate((soft_mask[:eyeh], soft_mask_dilate[eyeh:]), axis=0)
-                    else:
-                        soft_mask = soft_mask_dilate
-            else:
-                if ksize1 > 0:
-                    kernel_size1 = int(np.sqrt(np.sum(soft_mask)) * ksize1)
-                    kernel1 = np.ones((kernel_size1, kernel_size1))
-                    soft_mask = cv2.dilate(mask_face, kernel1, iterations=1)
-                else:
-                    soft_mask = mask_face
-            if include_neck:
-                soft_mask = np.clip(soft_mask + mask_neck, 0, 1)
-
-        if return_human:
-            mask_human = cv2.GaussianBlur(mask_human, (21, 21), 0) * mask_human
-            return soft_mask, mask_human
-        else:
-            return soft_mask
-
     def fc_segment(self, source_image):
         pil_source_image = tensor_to_img(source_image)
-        mask = self.segment(get_segmentation(), pil_source_image, ksize=0.1)
+        mask = segment(pil_source_image, ksize=0.1)
         seg_image = tensor_to_np(source_image) * mask[:, :, None]
         return (image_np_to_image_tensor(seg_image), mask_np2_to_mask_tensor(mask),)
 
 
-class FCReplaceImage:
+class FCFaceSegAndReplace:
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -208,37 +92,14 @@ class FCReplaceImage:
         }
 
     RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "replace_image"
+    FUNCTION = "face_swap"
     CATEGORY = "facechain/model"
 
-    def replace_image(self, source_image, replace_image, face_box, mask):
-        face_ratio = 0.45
-        h, w, _ = replace_image.shape
-        cropl = int(max(face_box[3] - face_box[1], face_box[2] - face_box[0]) / face_ratio / 2)
-        cx = int((face_box[2] + face_box[0]) / 2)
-        cy = int((face_box[1] + face_box[3]) / 2)
-        cropup = min(cy, cropl)
-        cropbo = min(h - cy, cropl)
-        crople = min(cx, cropl)
-        cropri = min(w - cx, cropl)
-        ksize = int(10 * cropl / 256)
-        rst_gen = cv2.resize(replace_image, (cropl * 2, cropl * 2))
-        rst_crop = rst_gen[cropl - cropup:cropl + cropbo, cropl - crople:cropl + cropri]
-        print(rst_crop.shape)
-        inpaint_img_rst = np.zeros_like(source_image)
-        print('Start pasting.')
-        inpaint_img_rst[cy - cropup:cy + cropbo, cx - crople:cx + cropri] = rst_crop
-        print('Fininsh pasting.')
-        print(inpaint_img_rst.shape, mask.shape, source_image.shape)
-        mask_large = mask.astype(np.float32)
-        kernel = np.ones((ksize * 2, ksize * 2))
-        mask_large1 = cv2.erode(mask_large, kernel, iterations=1)
-        mask_large1 = cv2.GaussianBlur(mask_large1, (int(ksize * 1.8) * 2 + 1, int(ksize * 1.8) * 2 + 1), 0)
-        mask_large1[face_box[1]:face_box[3], face_box[0]:face_box[2]] = 1
-        mask_large = mask_large * mask_large1
-        final_inpaint_rst = (inpaint_img_rst.astype(np.float32) * mask_large.astype(np.float32) + source_image.astype(np.float32) * (1.0 - mask_large.astype(np.float32))).astype(
-            np.uint8)
-        return (final_inpaint_rst,)
+    def face_swap(self, source_image, replace_image):
+        pil_source_image = image_to_tensor(source_image)
+        pil_replace_image = image_to_tensor(replace_image)
+        image = face_fusing_seg_replace(pil_source_image, pil_replace_image)
+        return (image_np_to_image_tensor(image),)
 
 
 class FCCropBottom:
@@ -258,7 +119,7 @@ class FCCropBottom:
     def crop_bottom(self, source_image, width):
         source_image = tensor_to_img(source_image)
         crop_result = crop_bottom(source_image, width)
-        return (img_to_tensor(crop_result),)
+        return (image_to_tensor(crop_result),)
 
 
 class FCCropAndPaste:
