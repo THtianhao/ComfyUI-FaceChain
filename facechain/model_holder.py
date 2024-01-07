@@ -23,7 +23,6 @@ def get_face_detection():
         face_detection = pipeline(task=Tasks.face_detection, model='damo/cv_ddsar_face-detection_iclr23-damofd', model_revision='v1.1')
     return face_detection
 
-    image_face_fusion = pipeline('face_fusion_torch', model='damo/cv_unet_face_fusion_torch', model_revision='v1.0.5')
 
 def get_image_face_fusion():
     global image_face_fusion
