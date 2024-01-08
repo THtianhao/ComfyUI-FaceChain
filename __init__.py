@@ -19,6 +19,7 @@ NODE_CLASS_MAPPINGS = {
     "FC ReplaceByMask": FCReplaceByMask,
     "FC CropAndPaste": FCCropAndPaste,
     "FC MaskOP": FCMaskOP,
+    "FC CropToOrigin": FCCropToOrigin,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "FC FaceDetectCrop": "FC FaceDetectCrop",
@@ -30,6 +31,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "FC ReplaceByMask": "FC ReplaceByMask",
     "FC CropAndPaste": "FC CropAndPaste",
     "FC MaskOP": "FC MaskOP",
+    "FC CropToOrigin": "FC CropToOrigin",
 
 }
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']

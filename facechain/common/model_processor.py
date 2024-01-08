@@ -6,15 +6,14 @@ from skimage import transform
 from facechain.model_holder import *
 from facechain.utils.convert_utils import *
 
-
 def debug(*args):
     print(f"==== face chain debug ====", *args)
-
 
 def facechain_detect_crop(source_image_pil, face_index=0, crop_ratio=1, mode='normal'):
     det_result = get_face_detection()(source_image_pil)
     mask = np.zeros_like(source_image_pil)
     bboxes = det_result['boxes']
+    bboxes = np.array(bboxes).astype(np.int16)
     keypoints = det_result['keypoints']
     area = 0
     # for i in range(len(bboxes)):
@@ -31,6 +30,7 @@ def facechain_detect_crop(source_image_pil, face_index=0, crop_ratio=1, mode='no
     keypoint = keypoints[face_index]
     points_array = np.zeros((5, 2))
     w, h = source_image_pil.size
+    debug(f'bbox', bbox[0], bbox[1], bbox[2], bbox[3])
     debug('w = ', w, 'h = ', h)
     face_w = bbox[2] - bbox[0]
     face_h = bbox[3] - bbox[1]
@@ -67,7 +67,6 @@ def facechain_detect_crop(source_image_pil, face_index=0, crop_ratio=1, mode='no
         return inpaint_img, mask, bbox, points_array,
     else:
         raise RuntimeError('模式错误')
-
 
 def segment(img, ksize=0, eyeh=0, ksize1=0, include_neck=False, warp_mask=None, return_human=True):
     seg_image = get_segmentation()(img)
@@ -136,13 +135,11 @@ def segment(img, ksize=0, eyeh=0, ksize1=0, include_neck=False, warp_mask=None, 
         # 返回一个是PIL，一个是np的二维数组
         return seg_image, soft_mask,
 
-
 def face_fusion(image, fusion_image):
     cv_fusion_result = get_image_face_fusion()(dict(template=image, user=fusion_image))[OutputKeys.OUTPUT_IMG]
     np_fusion_result = cv2.cvtColor(cv_fusion_result, cv2.COLOR_BGR2RGB)
     debug("cv_fusion_result", cv_fusion_result.shape)
     return np_fusion_result
-
 
 def face_fusing_seg_replace(image, replace_image):
     np_fusion_result = face_fusion(image, replace_image)
@@ -150,7 +147,6 @@ def face_fusing_seg_replace(image, replace_image):
     cv_replace_result = (np_fusion_result * face_mask[:, :, None] + np.array(image) * (1 - face_mask[:, :, None])).astype(np.uint8)
     debug("cv_replace_result", cv_replace_result.shape)
     return np_fusion_result, cv_replace_result
-
 
 def crop_and_paste(Source_image, Source_image_mask, Target_image, Source_Five_Point, Target_Five_Point, Source_box, use_warp=True):
     debug(f"crop and paste", Source_image, Source_image_mask, Target_image, Source_Five_Point, Target_Five_Point, Source_box)
