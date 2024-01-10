@@ -10,6 +10,7 @@ from facechain.nodes import *
 from facechain.style_loader_node import *
 
 NODE_CLASS_MAPPINGS = {
+    "FC StyleLoraLoad": FCStyleLoraLoad,
     "FC FaceDetectCrop": FaceDetectCrop,
     "FC FaceFusion": FCFaceFusion,
     "FC FaceSegment": FCFaceSegment,
@@ -22,6 +23,7 @@ NODE_CLASS_MAPPINGS = {
     "FC CropToOrigin": FCCropToOrigin,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "FC StyleLoraLoad": "FC StyleLoraLoad",
     "FC FaceDetectCrop": "FC FaceDetectCrop",
     "FC FaceFusion": "FC FaceFusion",
     "FC FaceSegment": "FC FaceSegment",
