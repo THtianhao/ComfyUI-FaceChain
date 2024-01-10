@@ -8,6 +8,8 @@ parent_dir = os.path.dirname(root_path)
 sys.path.append(root_path)
 from facechain.nodes import *
 from facechain.style_loader_node import *
+WEB_DIRECTORY = "js"
+
 
 NODE_CLASS_MAPPINGS = {
     "FC StyleLoraLoad": FCStyleLoraLoad,
