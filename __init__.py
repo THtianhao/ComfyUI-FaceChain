@@ -2,10 +2,10 @@ import os
 import subprocess
 import sys
 import threading
-import facechain.utils.install
 root_path = os.path.dirname(__file__)
 parent_dir = os.path.dirname(root_path)
 sys.path.append(root_path)
+import facechain.utils.install
 from facechain.nodes import *
 from facechain.style_loader_node import *
 WEB_DIRECTORY = "js"
