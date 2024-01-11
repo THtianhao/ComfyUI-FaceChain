@@ -8,6 +8,7 @@ parent_dir = os.path.dirname(root_path)
 sys.path.append(root_path)
 from facechain.nodes import *
 from facechain.style_loader_node import *
+import facechain.utils.install
 WEB_DIRECTORY = "js"
 
 
