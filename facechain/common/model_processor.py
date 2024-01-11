@@ -48,7 +48,7 @@ def facechain_detect_crop(source_image_pil, face_index=0, crop_ratio=1, mode='no
         debug('mask', mask.shape)
         corp_img_pil = source_image_pil.crop(bbox)
         return corp_img_pil, mask, bbox, points_array
-    elif mode == "square 512 width heigh":
+    elif mode == "square 512 width height":
         np_image = image_to_np(source_image_pil)
         face_ratio = 0.45
         crop_l = int(max(face_h, face_w) / face_ratio / 2)
@@ -69,6 +69,7 @@ def facechain_detect_crop(source_image_pil, face_index=0, crop_ratio=1, mode='no
         raise RuntimeError('模式错误')
 
 def segment(img, ksize=0, eyeh=0, ksize1=0, include_neck=False, warp_mask=None, return_human=True):
+    print('ksize', ksize, "ksize1", ksize1, 'warp_mask', warp_mask)
     seg_image = get_segmentation()(img)
     masks = seg_image['masks']
     scores = seg_image['scores']

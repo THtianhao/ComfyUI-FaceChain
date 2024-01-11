@@ -54,7 +54,7 @@ class FCStyleLoraLoad:
             }
         }
 
-    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "CONDITION",)
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING",)
     RETURN_NAMES = ("MODEL", "CLIP", "VAE", "style_prompt",)
     FUNCTION = "style_lora_load"
     CATEGORY = "facechain/lora"

@@ -32,7 +32,7 @@ class FaceDetectCrop:
                 "source_image": ("IMAGE",),
                 "face_index": ("INT", {"default": 0, "min": 0, "max": 10, "step": 1}),
                 "crop_ratio": ("FLOAT", {"default": 1.0, "min": 0, "max": 10, "step": 0.1}),
-                "mode": (["normal", "square 512 width heigh"],),
+                "mode": (["normal", "square 512 width height"],),
             }
         }
 
@@ -54,8 +54,8 @@ class FCFaceSegment:
 
             },
             "optional": {
-                "ksize": ("FLOAT", {"default": 0, "min": 0, "max": 10, "step": 0.1}),
-                "ksize1": ("FLOAT", {"default": 0, "min": 0, "max": 10, "step": 0.1}),
+                "ksize": ("FLOAT", {"default": 0, "min": 0, "max": 1, "step": 0.01}),
+                "ksize1": ("FLOAT", {"default": 0, "min": 0, "max": 1, "step": 0.01}),
                 "include_neck": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
                 "warp_mask": ("MASK",),
             },
@@ -66,9 +66,9 @@ class FCFaceSegment:
     FUNCTION = "fc_segment"
     CATEGORY = "facechain/model"
 
-    def fc_segment(self, source_image, ksize=0, ksize1=0, include_neck=False, warp_mask=None, ):
+    def fc_segment(self, source_image, ksize, ksize1, include_neck=False, warp_mask=None, ):
         pil_source_image = tensor_to_img(source_image)
-        seg_image, mask, human_mask = segment(pil_source_image, ksize, ksize1, include_neck, warp_mask, True)
+        seg_image, mask, human_mask = segment(pil_source_image, ksize=ksize, ksize1=ksize1, include_neck=include_neck, warp_mask=warp_mask, return_human=True)
         return image_to_tensor(seg_image), mask_np2_to_mask_tensor(mask), mask_np2_to_mask_tensor(human_mask)
 
 class FCFaceFusionAndSegReplace:
@@ -177,7 +177,7 @@ class FCReplaceByMask:
         np_source_image = tensor_to_np(source_image)
         np_replace_image = tensor_to_np(replace_image)
         np_mask = mask_tensor_to_mask_np3(mask)
-        result_np = np_source_image * np_mask + np_replace_image(1 - np_mask)
+        result_np = np_source_image * np_mask + np_replace_image * (1 - np_mask)
         return (image_np_to_image_tensor(result_np),)
 
 class FCCropAndPaste:
@@ -213,8 +213,8 @@ class FCMaskOP:
         return {
             "required": {
                 "mask": ("MASK",),
-                "ksize": ("INT", {"default": 8, "min": 0, "max": 100, "step": 1}),
-                "method": (["expand_dims", "concatenate", "burl", "erode"],),
+                "method": (["burl", "erode", "dilate"],),
+                "kernel": ("INT", {"default": 16, "min": 0, "max": 100, "step": 1}),
             }
         }
 
@@ -222,19 +222,19 @@ class FCMaskOP:
     FUNCTION = "mask_op"
     CATEGORY = "facechain/mask"
 
-    def mask_op(self, mask, ksize, method):
+    def mask_op(self, mask, method, kernel):
         mask_np = mask_tensor_to_mask_np3(mask)
         result = None
-        if method == "concatenate":
-            result = np.concatenate([mask_np, mask_np, mask_np], axis=2)
-        elif method == "expand_dims":
-            result = np.expand_dims(mask_np, axis=2)
-        elif method == "burl":
-            result = cv2.GaussianBlur(mask_np, (int(ksize * 1.8) * 2 + 1, int(ksize * 1.8) * 2 + 1), 0)
+        kernel_real = np.ones((kernel, kernel), np.uint8)
+        if method == "burl":
+            result = cv2.GaussianBlur(mask_np, (int(kernel * 1.8) * 2 + 1, int(kernel * 1.8) * 2 + 1), 0)
             result = np.expand_dims(result, axis=2)
         elif method == 'erode':
-            kernel = np.ones((ksize * 2, ksize * 2))
-            result = cv2.erode(mask_np, kernel, iterations=1)
+            result = cv2.erode(mask_np, kernel_real, iterations=1)
+            result = np.expand_dims(result, axis=2)
+        elif method == 'dilate':
+            result = cv2.dilate(mask_np, kernel_real, iterations=1)
+            result = np.expand_dims(result, axis=2)
         return (mask_np3_to_mask_tensor(result),)
 
 class FCCropToOrigin:
