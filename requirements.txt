@@ -7,4 +7,3 @@ mediapipe
 transformers
 insightface
 sentencepiece
-xformers
