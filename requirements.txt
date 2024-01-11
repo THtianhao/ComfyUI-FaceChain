@@ -7,14 +7,3 @@ mmdet==2.26.0
 mediapipe
 insightface
 sentencepiece
-transformers
-mmdet==2.26.0
-
-
-opencv-python
-tensorflow-cpu
-tensorflow
-# onnx
-# onnxruntime
-# matplotlib
-# diffusers==0.18.2
