@@ -8,6 +8,7 @@ mediapipe
 insightface
 sentencepiece
 tensorflow
+torchvision
 
 
 # transformers
