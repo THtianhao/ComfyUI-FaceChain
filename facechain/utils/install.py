@@ -56,6 +56,11 @@ def get_installed_packages():
 
     return pip_list
 
+def mmcv_install():
+    process_wrap(mim_install + ['-U', 'openmim'], cwd=root_path)
+    process_wrap(['mim', 'install', 'mmcv-full'], cwd=root_path)
+    pass
+
 def is_installed(name):
     name = name.strip()
     pattern = r'([^<>!=]+)([<>!=]=?)'
@@ -99,6 +104,7 @@ try:
         mim_install = [sys.executable, '-m', 'mim', 'install']
 
     subpack_req = os.path.join(root_path, "requirements.txt")
+    mmcv_install()
     check_and_install_requirements(subpack_req)
     # if platform.system() != "Windows" and not is_installed('mmcv_full'):
     #     pass
