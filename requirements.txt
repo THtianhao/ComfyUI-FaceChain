@@ -10,6 +10,11 @@ sentencepiece
 transformers
 mmdet==2.26.0
 
-mmengine
-timm
-mediapipe
+
+opencv-python
+tensorflow-cpu
+tensorflow
+# onnx
+# onnxruntime
+# matplotlib
+# diffusers==0.18.2
