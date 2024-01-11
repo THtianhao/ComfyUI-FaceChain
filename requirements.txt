@@ -2,16 +2,15 @@ python-slugify==8.0.1
 onnxruntime-gpu
 modelscope
 controlnet_aux==0.0.6
-# mmcv-full==1.7.0
+mmcv-full==1.7.0
 mmdet==2.26.0
 mediapipe
 insightface
 sentencepiece
-tensorflow
-torchvision
+# tensorflow
+# torchvision
+transformers
 
-
-# transformers
 # onnxruntime==1.15.1
 # diffusers>=0.23.0
 # invisible-watermark>=0.2.0
