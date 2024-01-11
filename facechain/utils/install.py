@@ -98,17 +98,14 @@ try:
     log("### : Check dependencies")
     if "python_embed" in sys.executable or "python_embedded" in sys.executable:
         pip_install = [sys.executable, '-s', '-m', 'pip', 'install', '-q']
-        mim_install = [sys.executable, '-s', '-m', 'mim', 'install']
+        mim_install = [sys.executable, '-s', '-m', 'mim', 'install', '-q']
     else:
         pip_install = [sys.executable, '-m', 'pip', 'install', '-q']
-        mim_install = [sys.executable, '-m', 'mim', 'install']
+        mim_install = [sys.executable, '-m', 'mim', 'install', '-q']
 
     subpack_req = os.path.join(root_path, "requirements.txt")
     mmcv_install()
     check_and_install_requirements(subpack_req)
-    # if platform.system() != "Windows" and not is_installed('mmcv_full'):
-    #     pass
-        # process_wrap(pip_install + ['mmcv_full'], cwd=root_path)
     if sys.argv[0] == 'install.py':
         sys.path.append('..')  # for portable version
 
