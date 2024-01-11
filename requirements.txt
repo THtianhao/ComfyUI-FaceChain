@@ -7,3 +7,4 @@ mmdet==2.26.0
 mediapipe==0.10.3
 edge_tts
 insightface
+sentencepiece
