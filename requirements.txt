@@ -8,17 +8,14 @@ mediapipe
 insightface
 sentencepiece
 transformers
-onnxruntime
-diffusers>=0.23.0
+# onnxruntime
+# diffusers>=0.23.0
 # opencv-python
-# mmdet==2.26.0
+mmdet==2.26.0
 # mmengine
 # numpy==1.22.0
 # protobuf==3.20.1
 # timm
 # scikit-image==0.19.3
-# gradio
-# controlnet_aux==0.0.6
 # mediapipe
-# python-slugify
-# edge-tts
+python-slugify
