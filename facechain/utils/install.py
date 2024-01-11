@@ -57,8 +57,8 @@ def get_installed_packages():
     return pip_list
 
 def mmcv_install():
-    process_wrap(mim_install + ['-U', 'openmim'], cwd=root_path)
-    process_wrap(['mim', 'install', 'mmcv-full'], cwd=root_path)
+    process_wrap(pip_install + ['-U', 'openmim'], cwd=root_path)
+    process_wrap(mim_install + ['mmcv-full'], cwd=root_path)
     pass
 
 def is_installed(name):
