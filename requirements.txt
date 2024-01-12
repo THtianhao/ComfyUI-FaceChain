@@ -1,3 +1,4 @@
+aliyun-python-sdk-core-v3==2.13.10
 python-slugify==8.0.1
 onnxruntime-gpu
 modelscope

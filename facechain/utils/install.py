@@ -104,8 +104,8 @@ try:
         mim_install = [sys.executable, '-m', 'mim', 'install', '-q']
 
     subpack_req = os.path.join(root_path, "requirements.txt")
-    mmcv_install()
     check_and_install_requirements(subpack_req)
+    mmcv_install()
     if sys.argv[0] == 'install.py':
         sys.path.append('..')  # for portable version
 
