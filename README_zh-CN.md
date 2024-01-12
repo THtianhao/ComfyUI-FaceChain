@@ -93,7 +93,7 @@ Facechain工作位置: [workflow_inpaiting_inference.png](workflows%2Fworkflow_i
 * FC FCCropToOrigin
   > 目前只能配合 `FC FaceDetectCrop` 的`square 512 width height`模式一起使用,将截取的图像根据mask粘贴到目标图像上
   
-![workflow_face_detect_crop.png](workflows%2Fworkflow_face_detect_crop.png)
+![workflow_crop_to_origin.png](workflows%2Fworkflow_crop_to_origin.png)![workflow_face_detect_crop.png](workflows%2Fworkflow_face_detect_crop.png)
 
 参数介绍:
 1. origin_image: 原始图像

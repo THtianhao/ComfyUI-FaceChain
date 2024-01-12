@@ -93,8 +93,7 @@ Parameter Description:
 * FC FCCropToOrigin
   > Currently, it can only be used in conjunction with `FC FaceDetectCrop` in `square 512 width height` mode. Pastes the cropped image onto the target image based on the mask.
   
-![workflow_face_detect_crop.png](workflows%2Fworkflow_face_detect_crop.png)
-
+![workflow_crop_to_origin.png](workflows%2Fworkflow_crop_to_origin.png)
 Parameter Description:
 1. origin_image: Original image.
 2. origin_box: Bounding box of the original image.
