@@ -26,7 +26,7 @@ cd custom_nodes
 3. Clone this project into the `custom_nodes` directory.
 
 ```
-git clone https://github.com/THtianhao/ComfyUI-Portrait-Maker.git
+git clone https://github.com/THtianhao/ComfyUI-FaceChain
 ```
 
 4. Restart ComfyUI.
