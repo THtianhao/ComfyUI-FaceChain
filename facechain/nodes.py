@@ -33,6 +33,7 @@ class FaceDetectCrop:
                 "face_index": ("INT", {"default": 0, "min": 0, "max": 10, "step": 1}),
                 "crop_ratio": ("FLOAT", {"default": 1.0, "min": 0, "max": 10, "step": 0.1}),
                 "mode": (["normal", "square 512 width height"],),
+                "error_when_no_face": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
             }
         }
 
@@ -40,9 +41,11 @@ class FaceDetectCrop:
     FUNCTION = "face_detection"
     CATEGORY = "facechain/model"
 
-    def face_detection(self, source_image, face_index, crop_ratio, mode):
+    def face_detection(self, source_image, face_index, crop_ratio, mode, error_when_no_face):
         pil_image = tensor_to_img(source_image)
-        corp_img_pil, mask, bbox, points_array = facechain_detect_crop(pil_image, face_index, crop_ratio, mode)
+        corp_img_pil, mask, bbox, points_array = facechain_detect_crop(pil_image, face_index, crop_ratio, mode, error_when_no_face)
+        if mask is None and bbox is None and points_array is None:
+            return (source_image, source_image, None, None)
         return (image_to_tensor(corp_img_pil), mask_np3_to_mask_tensor(mask), bbox, points_array,)
 
 class FCFaceSegment:
