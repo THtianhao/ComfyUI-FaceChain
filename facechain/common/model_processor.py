@@ -25,7 +25,7 @@ def facechain_detect_crop(source_image_pil, face_index=0, crop_ratio=1, mode='no
     try:
         bbox = bboxes[face_index]
     except:
-        if error_when_no_face:
+        if not error_when_no_face:
             return source_image_pil, None, None, None
         raise RuntimeError('No face detected or face index error/没有检测到人脸或者人脸的索引错误')
 
