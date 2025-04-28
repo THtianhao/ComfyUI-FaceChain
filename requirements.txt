@@ -1,11 +1,13 @@
-aliyun-python-sdk-core-v3==2.13.10
-python-slugify==8.0.1
+aliyun-python-sdk-core-v3>=2.13.10
+python-slugify>=8.0.1
 onnxruntime-gpu
 timm
 modelscope
-controlnet_aux==0.0.6
-mmdet==2.26.0
+controlnet_aux>=0.0.6
+mmdet>=2.26.0
 mediapipe
 transformers
 insightface
 sentencepiece
+pysoundfile
+soundfile
