@@ -1,0 +1,15 @@
+[project]
+name = "comfyui-facechain"
+description = "The official ComfyUI version of facechain greatly improves the speed of reasoning and has great custom process controls."
+version = "1.0.0"
+license = "LICENSE"
+dependencies = ["aliyun-python-sdk-core-v3==2.13.10", "python-slugify==8.0.1", "onnxruntime-gpu", "timm", "modelscope", "controlnet_aux==0.0.6", "mmdet==2.26.0", "mediapipe", "transformers", "insightface", "sentencepiece"]
+
+[project.urls]
+Repository = "https://github.com/THtianhao/ComfyUI-FaceChain"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI-FaceChain"
+Icon = ""
